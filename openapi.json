@@ -1,0 +1,236 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Scheduler API",
+    "version": "1.0.0",
+    "description": "API contract for the Smart Course Scheduler - Scheduler API."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/scheduler/generate": {
+      "post": {
+        "summary": "Generate Schedule",
+        "description": "Generates an optimized course schedule for a student using AI insights.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "student_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "term": {
+                    "type": "string"
+                  },
+                  "selected_course_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "student_id",
+                  "selected_course_ids"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Schedule Generation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request"
+          },
+          "409": {
+            "description": "Schedule Conflict"
+          }
+        }
+      }
+    },
+    "/scheduler/{schedule_id}": {
+      "get": {
+        "summary": "Get Schedule by ID",
+        "description": "Retrieves a previously generated schedule.",
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schedule Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule Not Found"
+          }
+        }
+      }
+    },
+    "/scheduler/student/{student_id}": {
+      "get": {
+        "summary": "Get Student Schedules",
+        "description": "Retrieves all schedules for a specific student.",
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schedules Retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "student_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "schedules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "schedule_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "term": {
+                            "type": "string"
+                          },
+                          "total_credits": {
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ScheduleResponse": {
+        "type": "object",
+        "properties": {
+          "schedule_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "student_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "term": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "ai_insights": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string"
+              },
+              "warnings": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "weekly_schedule": {
+            "type": "object",
+            "description": "Key is the day of the week (e.g., 'Monday')",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "course_id": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "start_time": {
+                    "type": "string",
+                    "description": "Time in HH:MM format"
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "description": "Time in HH:MM format"
+                  },
+                  "location": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "total_credits": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}
