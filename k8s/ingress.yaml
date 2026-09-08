@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: schedulerapi-ingress
+  annotations:
+    # Keeps the full path intact so FastAPI receives /api/v1/... properly
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # Route API traffic to schedulerapi-service:8000
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: schedulerapi-service
+                port:
+                  number: 8000
+          # Route static frontend traffic to frontend-service:80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

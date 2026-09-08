@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: schedulerapi-service
+  labels:
+    app: schedulerapi
+spec:
+  selector:
+    app: schedulerapi
+  ports:
+    - name: schedulerapi-port
+      protocol: TCP
+      targetPort: 8000
+      port: 8000

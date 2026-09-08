@@ -1,0 +1,27 @@
+# Secrets & Environment variables
+*secrets.yaml
+*.secret.yaml
+.env
+.env.*
+
+# Python Virtual Environments
+.venv/
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+
+# Local SQLite
+*.db
+*.sqlite3
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

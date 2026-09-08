@@ -1,17 +1,32 @@
+# Python Cache
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Local database files
 *.db
 *.sqlite3
+
+# Environment files & Secrets
 .env
 .env.*
+*secrets.yaml
+
+# Virtual Environments
 .venv/
 env/
 venv/
+
+# Testing & Coverage
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Git & Editor metadata
 .git/
 .github/
 .vscode/
 .idea/
+
+# Kubernetes manifests (not needed inside container images)
+k8s/

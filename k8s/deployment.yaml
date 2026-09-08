@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedulerapi-deployment
+  labels:
+    app: schedulerapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schedulerapi
+  template:
+    metadata:
+      labels:
+        app: schedulerapi
+    spec:
+      containers:
+        - name: schedulerapi
+          image: prospjx/schedulerapi:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: schedulerapi-configmap
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: schedulerapi-configmap
+                  key: POSTGRES_DB
+            - name: COURSE_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: schedulerapi-configmap
+                  key: COURSE_API_URL
+            - name: STUDENT_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: schedulerapi-configmap
+                  key: STUDENT_API_URL
+            - name: AI_ASSISTANT_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: schedulerapi-configmap
+                  key: AI_ASSISTANT_API_URL
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: schedulerapi-secret
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-service:5432/$(POSTGRES_DB)"
