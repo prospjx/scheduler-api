@@ -51,7 +51,7 @@ jobs:
 
       - name: Run Tests
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL}}
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schedulerapi
         run: pytest
 
       - name: Log in to GHCR
