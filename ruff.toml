@@ -1,0 +1,4 @@
+[lint]
+# B008: FastAPI uses Depends() as standard dependency injection in route parameters
+# BLE001: Intentional fallback when external service/AI fails
+ignore = ["B008", "BLE001"]

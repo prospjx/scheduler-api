@@ -1,11 +1,13 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+
+from src.database import Base, engine
 from src.routers import scheduler
-from src.database import engine, Base
 
 # Create database tables on startup (in production, use Alembic migrations instead)
 Base.metadata.create_all(bind=engine)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,13 +15,14 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown logic goes here
 
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Scheduler API",
     version="1.0.0",
     description="Orchestrates schedule generation.",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -32,6 +35,7 @@ app.add_middleware(
 
 # Register the routes with the API v1 prefix
 app.include_router(scheduler.router, prefix="/api/v1")
+
 
 @app.get("/health")
 def health_check():
