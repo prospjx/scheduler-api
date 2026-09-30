@@ -1,0 +1,62 @@
+name: SchedulerAPI CD
+
+on:
+  workflow_run:
+    workflows: ["SchedulerAPI CI"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl create secret generic schedulerapi-secret \
+            --from-literal=DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+            --from-literal=POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
+            --from-literal=PORT='${{ secrets.PORT }}' \
+            --from-literal=HOST='${{ secrets.HOST }}' \
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
+          kubectl apply --validate=false -f k8s/deployment.yaml
+          kubectl apply --validate=false -f k8s/service.yaml
+          kubectl apply --validate=false -f k8s/ingress.yaml
+          kubectl apply --validate=false -f k8s/configmap.yaml
+          kubectl rollout restart deployment/schedulerapi-deployment
+
+      - name: Check rollout status
+        run: |
+          if ! kubectl rollout status deployment/schedulerapi-deployment --timeout=120s; then
+            echo "::error::Rollout timed out or failed. Fetching pod diagnostics..."
+            echo "=== POD STATUS ==="
+            kubectl get pods -l app=schedulerapi -o wide
+            echo "=== POD EVENTS & DESCRIPTION ==="
+            kubectl describe pods -l app=schedulerapi
+            echo "=== POD LOGS ==="
+            kubectl logs -l app=schedulerapi --tail=100 --all-containers=true
+            exit 1
+          fi
