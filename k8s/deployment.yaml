@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: schedulerapi
-          image: prospjx/schedulerapi:latest
+          image: ghcr.io/prospjx/scheduler-api:latest
           ports:
             - containerPort: 8000
           env:

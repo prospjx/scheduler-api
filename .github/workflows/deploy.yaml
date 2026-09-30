@@ -39,8 +39,6 @@ jobs:
           kubectl create secret generic schedulerapi-secret \
             --from-literal=DATABASE_URL='${{ secrets.DATABASE_URL }}' \
             --from-literal=POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
-            --from-literal=PORT='${{ secrets.PORT }}' \
-            --from-literal=HOST='${{ secrets.HOST }}' \
             --dry-run=client -o yaml | kubectl apply --validate=false -f -
           kubectl apply --validate=false -f k8s/deployment.yaml
           kubectl apply --validate=false -f k8s/service.yaml
