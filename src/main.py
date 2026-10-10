@@ -72,6 +72,8 @@ def metrics():
 
 # Register the routes with the API v1 prefix
 app.include_router(scheduler.router, prefix="/api/v1")
+app.include_router(scheduler.proxy_router, prefix="/api/v1")
+
 
 
 @app.get("/health")
