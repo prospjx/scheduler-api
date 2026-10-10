@@ -9,3 +9,4 @@ black
 ruff
 pytest
 pytest-asyncio
+prometheus-client>=0.20.0
