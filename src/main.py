@@ -75,7 +75,6 @@ app.include_router(scheduler.router, prefix="/api/v1")
 app.include_router(scheduler.proxy_router, prefix="/api/v1")
 
 
-
 @app.get("/health")
 def health_check():
     """Simple health check endpoint for Kubernetes probes."""

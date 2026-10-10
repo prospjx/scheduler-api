@@ -1,7 +1,8 @@
 import httpx
-from fastapi import APIRouter, Depends, Request, Response, UploadFile, File
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
+from src.clients import AI_ASSISTANT_API_URL, COURSE_API_URL, STUDENT_API_URL
 from src.database import get_db
 from src.schemas import (
     GenerateScheduleRequest,
@@ -13,7 +14,6 @@ from src.services import (
     get_schedule_by_id,
     get_schedules_for_student,
 )
-from src.clients import COURSE_API_URL, STUDENT_API_URL, AI_ASSISTANT_API_URL
 
 router = APIRouter(prefix="/scheduler", tags=["Scheduler"])
 proxy_router = APIRouter(tags=["Gateway Proxy"])
@@ -50,12 +50,18 @@ async def proxy_courses(request: Request, path: str):
             url=target_url,
             headers={k: v for k, v in request.headers.items() if k.lower() != "host"},
             content=body,
-            params=dict(request.query_params)
+            params=dict(request.query_params),
         )
-    return Response(content=rp.content, status_code=rp.status_code, media_type=rp.headers.get("content-type"))
+    return Response(
+        content=rp.content,
+        status_code=rp.status_code,
+        media_type=rp.headers.get("content-type"),
+    )
 
 
-@proxy_router.api_route("/students{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+@proxy_router.api_route(
+    "/students{path:path}", methods=["GET", "POST", "PUT", "DELETE"]
+)
 async def proxy_students(request: Request, path: str):
     target_url = f"{STUDENT_API_URL}/students{path}"
     body = await request.body()
@@ -65,9 +71,13 @@ async def proxy_students(request: Request, path: str):
             url=target_url,
             headers={k: v for k, v in request.headers.items() if k.lower() != "host"},
             content=body,
-            params=dict(request.query_params)
+            params=dict(request.query_params),
         )
-    return Response(content=rp.content, status_code=rp.status_code, media_type=rp.headers.get("content-type"))
+    return Response(
+        content=rp.content,
+        status_code=rp.status_code,
+        media_type=rp.headers.get("content-type"),
+    )
 
 
 @proxy_router.api_route("/analyze{path:path}", methods=["GET", "POST"])
@@ -80,7 +90,10 @@ async def proxy_analyze(request: Request, path: str):
             url=target_url,
             headers={k: v for k, v in request.headers.items() if k.lower() != "host"},
             content=body,
-            params=dict(request.query_params)
+            params=dict(request.query_params),
         )
-    return Response(content=rp.content, status_code=rp.status_code, media_type=rp.headers.get("content-type"))
-
+    return Response(
+        content=rp.content,
+        status_code=rp.status_code,
+        media_type=rp.headers.get("content-type"),
+    )
