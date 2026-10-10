@@ -13,45 +13,28 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
-      contents: read
-      packages: read
+      contents: write
 
     steps:
-      - name: Checkout
+      - name: Checkout GitOps Repository
         uses: actions/checkout@v4
-
-      - name: Install Kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          repository: prospjx/gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          ref: master
 
-      - name: Update kubeconfig
+      - name: Update SchedulerAPI Image Tag
         run: |
-          aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+          IMAGE_TAG="v${{ github.event.workflow_run.run_number }}"
+          echo "Updating schedulerapi image tag to: $IMAGE_TAG"
+          sed -i "s/tag: .*/tag: \"$IMAGE_TAG\"/" charts/schedulerapi/values.yaml
 
-      - name: Deploy with Helm
-        run: |
-          helm upgrade --install schedulerapi ./helm \
-            --set image.tag="v${{ github.event.workflow_run.run_number }}" \
-            --set secrets.postgresPassword='${{ secrets.POSTGRES_PASSWORD }}' \
-            --wait \
-            --timeout 120s
-
-      - name: Check rollout diagnostics on failure
-        if: failure()
-        run: |
-          echo "::error::Deployment failed. Fetching pod diagnostics..."
-          echo "=== POD STATUS ==="
-          kubectl get pods -l app=schedulerapi -o wide
-          echo "=== POD EVENTS & DESCRIPTION ==="
-          kubectl describe pods -l app=schedulerapi
-          echo "=== POD LOGS ==="
-          kubectl logs -l app=schedulerapi --tail=100 --all-containers=true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add charts/schedulerapi/values.yaml
+          if git diff --staged --quiet; then
+            echo "No changes in image tag."
+          else
+            git commit -m "chore(schedulerapi): bump image tag to $IMAGE_TAG"
+            git push origin master
+          fi
