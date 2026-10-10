@@ -23,6 +23,9 @@ jobs:
       - name: Install Kubectl
         uses: azure/setup-kubectl@v4
 
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -34,27 +37,21 @@ jobs:
         run: |
           aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to Kubernetes
+      - name: Deploy with Helm
         run: |
-          kubectl create secret generic schedulerapi-secret \
-            --from-literal=DATABASE_URL='${{ secrets.DATABASE_URL }}' \
-            --from-literal=POSTGRES_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' \
-            --dry-run=client -o yaml | kubectl apply --validate=false -f -
-          kubectl apply --validate=false -f k8s/deployment.yaml
-          kubectl apply --validate=false -f k8s/service.yaml
-          kubectl apply --validate=false -f k8s/ingress.yaml
-          kubectl apply --validate=false -f k8s/configmap.yaml
-          kubectl rollout restart deployment/schedulerapi-deployment
+          helm upgrade --install schedulerapi ./helm \
+            --set image.tag="v${{ github.event.workflow_run.run_number }}" \
+            --set secrets.postgresPassword='${{ secrets.POSTGRES_PASSWORD }}' \
+            --wait \
+            --timeout 120s
 
-      - name: Check rollout status
+      - name: Check rollout diagnostics on failure
+        if: failure()
         run: |
-          if ! kubectl rollout status deployment/schedulerapi-deployment --timeout=120s; then
-            echo "::error::Rollout timed out or failed. Fetching pod diagnostics..."
-            echo "=== POD STATUS ==="
-            kubectl get pods -l app=schedulerapi -o wide
-            echo "=== POD EVENTS & DESCRIPTION ==="
-            kubectl describe pods -l app=schedulerapi
-            echo "=== POD LOGS ==="
-            kubectl logs -l app=schedulerapi --tail=100 --all-containers=true
-            exit 1
-          fi
+          echo "::error::Deployment failed. Fetching pod diagnostics..."
+          echo "=== POD STATUS ==="
+          kubectl get pods -l app=schedulerapi -o wide
+          echo "=== POD EVENTS & DESCRIPTION ==="
+          kubectl describe pods -l app=schedulerapi
+          echo "=== POD LOGS ==="
+          kubectl logs -l app=schedulerapi --tail=100 --all-containers=true
