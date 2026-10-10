@@ -1,0 +1,75 @@
+# Default values for schedulerapi.
+replicaCount: 1
+
+image:
+  repository: ghcr.io/prospjx/scheduler-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: "schedulerapi"
+fullnameOverride: "schedulerapi"
+
+strategy:
+  type: Recreate
+
+serviceAccount:
+  create: false
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  paths:
+    - path: /api
+      pathType: Prefix
+      service:
+        name: schedulerapi
+        port: 8000
+    - path: /
+      pathType: Prefix
+      service:
+        name: frontend-service
+        port: 80
+  hosts: []
+  tls: []
+
+resources: {}
+
+# Service URLs and Database configuration
+config:
+  courseApiUrl: "http://courseapi-service:8001/api/v1"
+  studentApiUrl: "http://studentapi-service:8002/api/v1"
+  aiAssistantApiUrl: "http://ai-assistant-api-service:8003/api/v1"
+  postgresUser: "postgres"
+  postgresDb: "schedulerdb"
+  dbHost: "postgres-service"
+  dbPort: "5432"
+
+secrets:
+  create: true
+  postgresPassword: "postgres"
+  # Existing secret name if managed outside this chart
+  existingSecretName: ""
+
+# Format: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-service:5432/$(POSTGRES_DB)
+databaseUrl: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
